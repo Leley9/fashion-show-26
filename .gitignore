@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Logs / temporaires
+*.log
+
+# Modèle Blender source NON compressé (76 Mo, dépasse les limites GitHub)
+# -> le site utilise 3D/space.glb (compressé), régénéré par le pipeline.
+3D/FashionShow26SpaceDraft.glb
+
+# Copies de travail de la compression média
+# (les originaux des photos sont dans /process, les versions web dans assets/media)
+assets/media/raw/*
+!assets/media/raw/README.txt
+
+# Dépendances éventuelles
+node_modules/

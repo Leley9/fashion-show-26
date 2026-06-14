@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DDW 26 — The Purple Show</title>
+  <link rel="stylesheet" href="main.css">
+
+  <!-- Typo "cool" pour le header/footer -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Indique au navigateur où trouver Three.js (modules ES via CDN) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Le canvas WebGL est injecté ici -->
+  <div id="app"></div>
+
+  <!-- Header : navigation principale (boutons vides, sans JS) -->
+  <header id="site-header">
+    <div class="brand">DDW 26 - The Purple Show</div>
+    <nav>
+      <button type="button">About</button>
+      <button type="button">Process</button>
+      <button type="button">Agenda</button>
+    </nav>
+  </header>
+
+  <!-- Footer : actions secondaires (boutons vides, sans JS) -->
+  <footer id="site-footer">
+    <button type="button">Subscribe to the newsletter</button>
+    <button type="button">Contact us</button>
+  </footer>
+
+  <!-- Bouton de bascule de mode de navigation -->
+  <button id="mode-btn" type="button">Mode: Orbit ⌨</button>
+
+  <!-- Écran de chargement -->
+  <div id="loader">
+    <h1>DDW 26 — Défilé</h1>
+    <p class="sub">Chargement de l'espace…</p>
+    <div id="loader-track"><div id="loader-bar"></div></div>
+  </div>
+
+  <!-- Invitation à entrer (gère le pointer lock en mode Vol) -->
+  <div id="intro" class="hidden">
+    <div class="card">
+      <h2>Enter the space</h2>
+      <p><b>Click</b> to explore in free-flight</p>
+      <p><kbd>W A S D</kbd> / <kbd>Z Q S D</kbd> fly · <kbd>Space</kbd> up · <kbd>Shift</kbd> down</p>
+      <p>Mouse: look · aim at a <b>bubble</b> and click · <kbd>Esc</kbd> to exit</p>
+      <p class="alt">Or switch back to <b>Orbit mode</b> (<kbd>Tab</kbd>) to navigate with the numpad.</p>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="reticle"></div>
+  <div id="tooltip"></div>
+  <div id="help"><b>WASD/ZQSD</b> fly · <b>Space/Shift</b> up-down · <b>Esc</b> release mouse · <b>Tab</b> Orbit mode</div>
+
+  <!-- Aide pavé numérique (mode Orbite) -->
+  <div id="numpad-help" class="hidden">
+    <b>Orbit — numpad (Blender-style)</b>
+    <div class="grid">
+      <span><kbd>1</kbd> front <span class="dim">(Ctrl back)</span></span>
+      <span><kbd>3</kbd> right <span class="dim">(Ctrl left)</span></span>
+      <span><kbd>7</kbd> top <span class="dim">(Ctrl bottom)</span></span>
+      <span><kbd>4</kbd>/<kbd>6</kbd> rotate ↔</span>
+      <span><kbd>8</kbd>/<kbd>2</kbd> rotate ↕</span>
+      <span><kbd>+</kbd>/<kbd>−</kbd> zoom</span>
+      <span><kbd>5</kbd> flatten / perspective</span>
+      <span><kbd>0</kbd> frame the scene</span>
+      <span class="dim">mouse: drag to orbit · wheel: zoom</span>
+    </div>
+  </div>
+
+  <!-- Modale de contenu -->
+  <div id="modal">
+    <div class="panel">
+      <button id="modal-close" aria-label="Fermer">✕</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script type="module" src="scene.js"></script>
+</body>
+</html>
