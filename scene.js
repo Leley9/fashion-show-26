@@ -32,8 +32,56 @@ const dom = renderer.domElement;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.05, 200);
-camera.position.set(2.0, 1.6, 2.4);   // décalée vers la gauche (axe z)
-camera.lookAt(10, 1.4, 4.6);           // même cible -> vue prise de biais
+// En mode orbite (le mode par défaut), c'est orbit.target — PAS lookAt — qui
+// dicte où regarde la caméra. On mémorise donc le point visé pour le donner
+// comme cible d'orbite, sinon le cadrage choisi est écrasé par le centre de scène.
+const DEFAULT_TARGET = new THREE.Vector3(-5.27, 4.08, 12.86);
+
+camera.position.set(-10.70, 7.01, 17.95);   // cadrage par défaut (desktop), choisi en vol libre
+camera.lookAt(DEFAULT_TARGET);
+
+// Détection mobile : sur écran étroit/portrait on n'utilise PAS le cadrage
+// desktop (trop serré). On cadre TOUTE la scène en 3/4 une fois le modèle
+// chargé — cf. le callback du loader plus bas (on a besoin du centre/rayon).
+const isMobile = matchMedia('(pointer: coarse)').matches || window.innerWidth < 600;
+// Cadrage dédié mobile (vue d'ensemble choisie sur l'appareil). Appliqué une
+// fois le modèle chargé — cf. le callback du loader plus bas.
+const MOBILE_POS = new THREE.Vector3(-17.55, 11.88, -21.20);
+const MOBILE_TARGET = new THREE.Vector3(-11.95, 9.31, -16.09);
+// --- Mode DEV : détecté largement (localhost, 127.x, 0.0.0.0, IP privée du
+// LAN pour tester sur mobile, *.local, ou ?dev dans l'URL). Jamais vrai sur
+// ddw26.pages.dev -> les aides au réglage ne fuitent jamais en prod. ---
+const DEV =
+  /^(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname)
+  || location.hostname.endsWith('.local')
+  || location.search.includes('dev');
+
+// Imprime ET copie (si le presse-papier est autorisé) le cadrage courant,
+// prêt à coller dans le code. En orbite on lit la VRAIE cible (orbit.target) ;
+// en vol libre on la déduit de la direction de visée (3e colonne de la matrice).
+// Appel : touche P, ou cam reste exposée pour bidouiller en console.
+function dumpCamera() {
+  const p = camera.position;
+  let tx, ty, tz;
+  if (mode === 'orbit') {
+    ({ x: tx, y: ty, z: tz } = orbit.target);
+  } else {
+    const e = camera.matrixWorld.elements;
+    tx = p.x - e[8] * 8; ty = p.y - e[9] * 8; tz = p.z - e[10] * 8;
+  }
+  const txt =
+`camera.position.set(${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)});
+camera.lookAt(${tx.toFixed(2)}, ${ty.toFixed(2)}, ${tz.toFixed(2)});`;
+  console.log('%cCadrage caméra (copié dans le presse-papier) :\n' + txt, 'color:#b07cff');
+  navigator.clipboard?.writeText(txt).catch(() => {});
+  return txt;
+}
+
+if (DEV) {
+  window.cam = camera;          // bidouille libre en console
+  window.dumpCamera = dumpCamera;
+  console.log('%c[DEV] Touche P = copier le cadrage caméra prêt à coller.', 'color:#b07cff');
+}
 
 /* ---------- HDRI Perlin (lumière + fond irisé) ---------- */
 const env = makePerlinEnv({ width: 256, height: 128 });
@@ -81,37 +129,106 @@ function statusFor(p) {
 let SCENE_CENTER = new THREE.Vector3(8.7, 0.5, 4.5);
 let SCENE_RADIUS = 10;
 
+// Variante du modèle : mobile = GLB plus léger (textures 1024), desktop =
+// pleine qualité (textures 2048). Les deux sont produits par le même export
+// Blender (cf. pipeline/update-model.sh) -> géométrie identique.
+const MODEL_URL = isMobile ? '3D/space-mobile.glb' : '3D/space.glb';
+
+// Progression de la barre, pilotée par les OCTETS RÉELLEMENT REÇUS.
+// Le serveur (dev en "chunked", parfois la prod) omet souvent Content-Length :
+// e.total vaut alors 0, MAIS e.loaded (octets reçus) reste fiable. On divise
+// donc par la taille du fichier -> vraie progression du téléchargement, fluide
+// et logique (à débit constant = vitesse constante). Plus de fausse rampe.
+let estTotal = isMobile ? 3_500_000 : 10_600_000;  // estimation de repli (octets)
+let shown = 0;        // % affiché : pilote la barre ET le chiffre (toujours en phase)
+let loadedBytes = 0;  // octets reçus (dispo même sans Content-Length)
+let knownTotal = 0;   // taille exacte si le serveur l'annonce (prime sur l'estimé)
+let floor = 0;        // filet anti-figé le temps d'établir la connexion
+let finished = false;
+
+// Taille exacte des variantes, écrite par le pipeline -> barre précise sans
+// constante codée en dur. Non bloquant : si le fetch échoue, on garde l'estimé.
+fetch('3D/space.manifest.json')
+  .then((r) => r.json())
+  .then((m) => { const b = isMobile ? m.mobile : m.desktop; if (b) estTotal = b; })
+  .catch(() => {});
+
+function paint(p) {
+  const v = Math.round(p);
+  loaderBar.style.width = v + '%';   // même valeur arrondie pour la barre…
+  if (loaderPct) loaderPct.innerHTML = v + '<small>%</small>';  // …et le chiffre
+  if (loaderStatus) loaderStatus.textContent = statusFor(v);
+}
+
+function animateLoader() {
+  if (finished) return;
+  // Cible = vraie progression du téléchargement. Plafond 99% : le décodage
+  // Draco arrive APRÈS le téléchargement -> finishLoader() conclut à 100%.
+  const total = knownTotal || estTotal;
+  floor = Math.min(12, floor + 0.3);   // bouge un peu avant les 1ers octets, puis le réel prend le relais
+  const target = Math.max(Math.min(99, (loadedBytes / total) * 100), floor);
+  // Rattrapage à vitesse constante (pas d'easing) -> aucune décélération
+  // « illogique » ni mur. Plafonné à la cible pour ne jamais la dépasser.
+  shown = Math.min(target, shown + 1.2);
+  paint(shown);
+  requestAnimationFrame(animateLoader);
+}
+requestAnimationFrame(animateLoader);
+
+// Tween final fluide de la valeur courante -> 100%, puis fondu de l'écran.
+function finishLoader() {
+  finished = true;
+  const from = shown;
+  let k = 0;
+  (function fill() {
+    k = Math.min(1, k + 0.06);                 // ~0.3s à 60fps
+    paint(from + (100 - from) * k);
+    if (k < 1) requestAnimationFrame(fill);
+    else setTimeout(() => loaderEl.classList.add('hidden'), 250);
+  })();
+}
+
 loader.load(
-  '3D/space.glb',
+  MODEL_URL,
   (gltf) => {
     scene.add(gltf.scene);
     // Centre / rayon de la scène -> pour cadrer l'orbite
     const box = new THREE.Box3().setFromObject(gltf.scene);
     box.getCenter(SCENE_CENTER);
     SCENE_RADIUS = box.getSize(new THREE.Vector3()).length() / 2;
+    // Position de départ choisie sur l'appareil (le cadrage que tu aimes)...
+    if (isMobile) camera.position.copy(MOBILE_POS);
+    // ...MAIS on orbite autour du VRAI centre du modèle. C'est la clé : comme
+    // OrbitControls zoome toujours VERS la cible, une cible décentrée (vers
+    // l'avant) rendait le zoom asymétrique — nickel de devant, impossible de
+    // dos (on fonçait vers le point avant en traversant la scène). En ciblant
+    // le centre, on s'approche du contenu depuis n'importe quel angle.
     orbit.target.copy(SCENE_CENTER);
-    orbit.minDistance = SCENE_RADIUS * 0.15;
-    orbit.maxDistance = SCENE_RADIUS * 4;
+    // Bornes proportionnelles à la distance de cadrage (caméra ↔ centre), pas
+    // au rayon de bounding box (faussé par l'étendue du sol/décor du GLB).
+    const frameDist = camera.position.distanceTo(orbit.target);
+    orbit.minDistance = frameDist * 0.12;   // s'approcher du contenu sans le traverser
+    orbit.maxDistance = frameDist * 3;       // voir toute la scène, sans plus (fini le 1px)
+    // FAR juste au-delà de l'éloignement max + l'étendue de la scène, pour ne
+    // jamais clipper la géométrie quand on est complètement dézoomé.
+    camera.far = orbit.maxDistance + SCENE_RADIUS * 2;
+    camera.updateProjectionMatrix();
     orbit.update();
     buildHotspots();
-    // Pousse la barre à 100% puis fond enchaîné une fois la scène prête
-    loaderBar.style.width = '100%';
-    if (loaderPct) loaderPct.innerHTML = '100<small>%</small>';
-    if (loaderStatus) loaderStatus.textContent = statusFor(100);
-    setTimeout(() => loaderEl.classList.add('hidden'), 450);
+    // Tween fluide vers 100% puis fondu une fois la scène prête.
+    finishLoader();
     setMode('orbit');                      // démarre en mode Orbite
   },
   (e) => {
-    if (!e.lengthComputable) return;
-    const p = Math.round((e.loaded / e.total) * 100);
-    loaderBar.style.width = p + '%';
-    if (loaderPct) loaderPct.innerHTML = p + '<small>%</small>';
-    if (loaderStatus) loaderStatus.textContent = statusFor(p);
+    // e.loaded = octets reçus (toujours fourni). e.total n'est dispo que si
+    // le serveur envoie Content-Length ; on s'en sert alors comme taille exacte.
+    loadedBytes = e.loaded;
+    if (e.lengthComputable && e.total) knownTotal = e.total;
   },
   (err) => {
     if (loaderStatus) loaderStatus.textContent = 'Could not load the space';
-    loaderEl.innerHTML = '<div class="loader-aurora"></div><div class="loader-core">'
-      + '<h1 class="loader-wordmark" data-text="Oops">Oops</h1>'
+    loaderEl.innerHTML = '<div class="loader-core">'
+      + '<h1 class="loader-wordmark">Oops</h1>'
       + '<p class="loader-status">The 3D space failed to load.<br>' + err + '</p></div>';
   }
 );
@@ -120,7 +237,10 @@ loader.load(
    CONTRÔLES
    =================================================================== */
 let mode = 'orbit';                       // 'fly' | 'orbit'  (orbite par défaut)
-let orbitFramedOnce = false;
+// true dès le départ : on garde le cadrage par défaut (camera.position +
+// DEFAULT_TARGET posés plus haut) au lieu de laisser frameScene() l'écraser
+// à la 1re entrée en orbite. frameScene() reste accessible via Numpad 0.
+let orbitFramedOnce = true;
 
 // -- Vol 1re personne --
 const fly = new PointerLockControls(camera, dom);
@@ -152,7 +272,35 @@ const orbit = new OrbitControls(camera, dom);
 orbit.enableDamping = true;
 orbit.dampingFactor = 0.08;
 orbit.enabled = false;
-orbit.target.copy(SCENE_CENTER);
+orbit.target.copy(DEFAULT_TARGET);
+
+/* ---------- Gestes tactiles (mobile) ----------
+   Un doigt = pivoter (orbite). Deux doigts qui glissent = TRANSLATION dans le
+   plan de l'écran : sur les côtés = latéral, vers le haut/bas = la caméra
+   monte/descend. Pincer = zoom (avancer/reculer).
+   screenSpacePanning à true => le haut/bas reste un vrai haut/bas écran. */
+orbit.screenSpacePanning = true;
+orbit.enablePan = true;
+orbit.touches.ONE = THREE.TOUCH.ROTATE;
+orbit.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+
+const isTouch = matchMedia('(pointer: coarse)').matches;
+
+// Zoom VERS le curseur : à la molette, on zoome là où pointe la souris.
+// MAIS pas au doigt : sur tactile, ce chemin se grippe quand le TOUT PREMIER
+// geste est un pincement (l'ancre de zoom n'a jamais été amorcée par un
+// déplacement préalable comme c'est toujours le cas à la souris) -> le zoom
+// « se bloque ». Sur tactile on garde donc un pincement = dolly simple et fiable.
+orbit.zoomToCursor = !isTouch;
+
+// Réglages de sensibilité réservés au tactile : on garde le feeling souris
+// intact sur desktop, et on rend le doigt plus franc + l'inertie plus glissée.
+if (isTouch) {
+  orbit.rotateSpeed = 0.55;     // pivot posé, pas nerveux à un doigt
+  orbit.panSpeed = 2.6;         // translation franche à deux doigts (latéral + haut/bas)
+  orbit.zoomSpeed = 2.4;        // pincer pour avancer/reculer — plus réactif
+  orbit.dampingFactor = 0.12;   // glissé qui se prolonge un peu après le doigt
+}
 
 const off = new THREE.Vector3();
 const sph = new THREE.Spherical();
@@ -196,7 +344,8 @@ function toggleOrtho() {                        // Numpad 5 : vue aplatie (quasi
 
 const STEP = Math.PI / 12;                       // 15°
 addEventListener('keydown', (e) => {
-  if (e.code === 'Tab') { e.preventDefault(); setMode(mode === 'fly' ? 'orbit' : 'fly'); return; }
+  if (e.code === 'Tab') { e.preventDefault(); if (!isMobile) setMode(mode === 'fly' ? 'orbit' : 'fly'); return; }
+  if (DEV && e.code === 'KeyP') { e.preventDefault(); dumpCamera(); return; }
   keys[e.code] = true;
   if (mode !== 'orbit' || modal.classList.contains('open')) return;
   const ctrl = e.ctrlKey || e.metaKey;
@@ -235,19 +384,26 @@ function setMode(m) {
     reticle.classList.add('hidden');
     help.classList.add('hidden');
     numpadHelp.classList.remove('hidden');
-    modeBtn.textContent = 'Mode: Orbit ⌨';
+    modeBtn.textContent = 'Mode: Orbit';
     dom.style.cursor = 'grab';
   } else {
     orbit.enabled = false;
     reticle.classList.remove('hidden');
     help.classList.remove('hidden');
     numpadHelp.classList.add('hidden');
-    modeBtn.textContent = 'Mode: Fly 🕊';
+    modeBtn.textContent = 'Mode: Fly';
     dom.style.cursor = 'default';
     if (!modal.classList.contains('open')) intro.classList.remove('hidden');
   }
 }
-modeBtn.addEventListener('click', () => setMode(mode === 'fly' ? 'orbit' : 'fly'));
+// Sur téléphone, le mode Fly (WASD + pointer-lock) n'a pas de sens : on bloque
+// la bascule. Le bouton est masqué et reste sur Orbite.
+if (isMobile) {
+  modeBtn.disabled = true;
+  modeBtn.hidden = true;
+} else {
+  modeBtn.addEventListener('click', () => setMode(mode === 'fly' ? 'orbit' : 'fly'));
+}
 
 /* ===================================================================
    BULLES (hotspots)
@@ -297,7 +453,11 @@ dom.addEventListener('pointermove', (e) => {
 });
 
 function pick() {
-  const usePoint = mode === 'fly' ? (fly.isLocked ? center : null) : mouseNDC;
+  // Au doigt (tactile) : pas de survol continu — on agit au tap (cf. pointerup).
+  // Sinon le tooltip/curseur resterait « collé » à la dernière position touchée.
+  const usePoint = mode === 'fly'
+    ? (fly.isLocked ? center : null)
+    : (isTouch ? null : mouseNDC);
   if (!usePoint) { hovered = null; reticle.classList.remove('active'); tooltip.classList.remove('show'); return; }
   raycaster.setFromCamera(usePoint, camera);
   const hits = raycaster.intersectObjects(hotspotGroup.children, false);
@@ -335,7 +495,7 @@ function mediaHTML(h) {
     else
       html += `<video src="${v}" controls preload="metadata"></video>`;
   }
-  if (!html) html = '<p class="soon">📷 Contenu à venir — photos & vidéos du studio.</p>';
+  if (!html) html = '<p class="soon">Contenu à venir — photos & vidéos du studio.</p>';
   return html;
 }
 function openModal(h) {
@@ -353,13 +513,32 @@ document.getElementById('modal-close').addEventListener('click', () => {
 });
 modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-/* ---------- Clic = ouvrir une bulle (clic franc, pas un drag) ---------- */
+/* ---------- Clic / tap = ouvrir une bulle (clic franc, pas un drag) ---------- */
+// Raycast PONCTUEL à un point écran donné : fiable au doigt (où il n'y a
+// pas de survol), aussi bien qu'à la souris. Renvoie la bulle touchée ou null.
+const tapNDC = new THREE.Vector2();
+function hotspotAt(clientX, clientY) {
+  tapNDC.x = (clientX / window.innerWidth) * 2 - 1;
+  tapNDC.y = -(clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(tapNDC, camera);
+  const hits = raycaster.intersectObjects(hotspotGroup.children, false);
+  return hits.length ? hits[0].object : null;
+}
+
 let downX = 0, downY = 0;
+// Tolérance de déplacement : un peu plus large au doigt (le doigt « bouge »
+// toujours un peu) qu'à la souris, pour distinguer un tap d'un glissé/orbite.
+const TAP_SLOP = isTouch ? 12 : 5;
 dom.addEventListener('pointerdown', (e) => { downX = e.clientX; downY = e.clientY; });
 dom.addEventListener('pointerup', (e) => {
   const moved = Math.hypot(e.clientX - downX, e.clientY - downY);
-  if (mode === 'fly' && fly.isLocked && hovered) openModal(hovered.userData.hotspot);
-  else if (mode === 'orbit' && moved < 5 && hovered) openModal(hovered.userData.hotspot);
+  if (mode === 'fly' && fly.isLocked && hovered) {
+    openModal(hovered.userData.hotspot);
+  } else if (mode === 'orbit' && moved < TAP_SLOP) {
+    // tap/clic franc : on vise précisément l'endroit relâché
+    const hit = hotspotAt(e.clientX, e.clientY);
+    if (hit) openModal(hit.userData.hotspot);
+  }
 });
 
 /* ---------- Entrée en vol (pointer lock) ---------- */

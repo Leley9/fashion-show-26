@@ -100,7 +100,7 @@ async function main() {
   const { subject, contentHtml } = await loadWeek();
   const emails = await loadSubscribers();
 
-  console.log(`\n🌱 ${subject}`);
+  console.log(`\n${subject}`);
   console.log(`   ${emails.length} subscriber(s) · from: ${cfg.from}` + (DRY_RUN ? '  [DRY RUN]' : ''));
 
   if (!emails.length) { console.log('   Nobody to send to yet.'); return; }

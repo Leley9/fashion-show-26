@@ -13,7 +13,7 @@ import { createHmac } from 'node:crypto';
 import nodemailer from 'nodemailer';
 import { renderWelcome } from './welcome-template.mjs';
 
-const SUBJECT = 'Welcome to the garden 🌱';
+const SUBJECT = 'Welcome to the garden';
 
 function need(name) {
   const v = process.env[name];

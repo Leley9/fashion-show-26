@@ -2,14 +2,16 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- maximum-scale + user-scalable=no : le pinch ne doit PAS zoomer la page
+       (sinon il vole le geste au zoom 3D et ça se bloque). Le canvas gère le zoom. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>DDW 26 — The Purple Show</title>
   <link rel="stylesheet" href="main.css">
 
   <!-- Typo "cool" pour le header/footer -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 
   <!-- Widget anti-robot ALTCHA (preuve de travail, sans pistage ni Google) -->
   <script async defer type="module" src="https://cdn.jsdelivr.net/npm/altcha@1/dist/altcha.min.js"></script>
@@ -23,6 +25,36 @@
     }
   }
   </script>
+
+  <!-- =====================================================================
+       PERF — on amorce les ressources lourdes DÈS le parsing du HTML, au
+       lieu d'attendre que Three.js soit téléchargé pour SEULEMENT ALORS
+       demander le modèle. Tout part en parallèle.
+       ===================================================================== -->
+
+  <!-- Handshake CDN anticipé (Three + décodeur Draco vivent sur jsdelivr) -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+  <!-- Modules Three : chargés en parallèle au lieu d'en cascade (importmap) -->
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js" crossorigin>
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/GLTFLoader.js" crossorigin>
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/DRACOLoader.js" crossorigin>
+
+  <!-- Le modèle : on précharge la BONNE variante selon l'appareil. Les `media`
+       reproduisent EXACTEMENT isMobile dans scene.js — (pointer: coarse) ||
+       innerWidth < 600 — pour ne jamais précharger les 10 Mo desktop sur un
+       téléphone (ni l'inverse). -->
+  <link rel="preload" as="fetch" type="model/gltf-binary" crossorigin="anonymous"
+        href="3D/space-mobile.glb" media="(pointer: coarse), (max-width: 599px)">
+  <link rel="preload" as="fetch" type="model/gltf-binary" crossorigin="anonymous"
+        href="3D/space.glb" media="(pointer: fine) and (min-width: 600px)">
+
+  <!-- Décodeur Draco (WASM) : sur le chemin critique JUSTE après le download du
+       GLB. On le récupère pendant que le modèle se télécharge. -->
+  <link rel="preload" as="fetch" crossorigin
+        href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/libs/draco/draco_wasm_wrapper.js">
+  <link rel="preload" as="fetch" crossorigin
+        href="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/libs/draco/draco_decoder.wasm">
 </head>
 <body>
 
@@ -31,7 +63,7 @@
 
   <!-- Header : navigation principale (boutons vides, sans JS) -->
   <header id="site-header">
-    <div class="brand">DDW 26 - The Purple Show</div>
+    <div class="brand">DDW 26<span class="brand-rest"> - The Purple Show</span></div>
     <nav>
       <button type="button">About</button>
       <button type="button">Process</button>
@@ -46,16 +78,13 @@
   </footer>
 
   <!-- Bouton de bascule de mode de navigation -->
-  <button id="mode-btn" type="button">Mode: Orbit ⌨</button>
+  <button id="mode-btn" type="button">Mode: Orbit</button>
 
   <!-- Écran de chargement -->
   <div id="loader">
-    <div class="loader-aurora"></div>
-    <div class="loader-grain"></div>
-
     <div class="loader-core">
       <span class="loader-kicker">Dutch Design Week · Eindhoven 2026</span>
-      <h1 class="loader-wordmark" data-text="THE PURPLE SHOW">THE PURPLE SHOW</h1>
+      <h1 class="loader-wordmark">The Purple Show</h1>
 
       <div class="loader-meter">
         <div id="loader-track"><div id="loader-bar"></div></div>
@@ -98,6 +127,7 @@
       <span><kbd>5</kbd> flatten / perspective</span>
       <span><kbd>0</kbd> frame the scene</span>
       <span class="dim">mouse: drag to orbit · wheel: zoom</span>
+      <span class="dim">touch: 1 finger orbit · 2 fingers slide to move · pinch to zoom</span>
     </div>
   </div>
 
@@ -109,12 +139,11 @@
     </div>
   </div>
 
-  <!-- Modale Newsletter (solarpunk) — ouverte par le bouton du footer -->
+  <!-- Modale Newsletter (Purple Show) — ouverte par le bouton du footer -->
   <div id="newsletter-modal">
     <div class="nl-panel">
       <button id="nl-close" type="button" aria-label="Close">✕</button>
 
-      <div class="nl-art" aria-hidden="true">🌱&nbsp;🌸&nbsp;🐝</div>
       <h2>Grow with us</h2>
       <p class="nl-sub">
         One short note a week — what we just built on the site and how the
@@ -141,6 +170,8 @@
   </div>
 
   <script type="module" src="newsletter.js"></script>
-  <script type="module" src="scene.js"></script>
+  <!-- ?v= : pousse les mobiles (cache JS agressif) à re-télécharger scene.js
+       après une modif. À incrémenter à chaque changement de comportement 3D. -->
+  <script type="module" src="scene.js?v=4"></script>
 </body>
 </html>

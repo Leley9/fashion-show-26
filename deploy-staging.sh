@@ -4,7 +4,7 @@
 #  -> projet Pages "ddw26-staging" · URL https://ddw26-staging.pages.dev
 #  Base KV + secrets séparés de la prod.
 #
-#  ⚠️ SÉCURITÉ : on écarte les fichiers sensibles avant l'upload (cf deploy.sh).
+#  SÉCURITÉ : on écarte les fichiers sensibles avant l'upload (cf deploy.sh).
 #  Usage :  ./deploy-staging.sh
 # =====================================================================
 set -euo pipefail
@@ -51,4 +51,4 @@ EOF
 # 3) déploie
 $WRANGLER pages deploy . --project-name=ddw26-staging --commit-dirty=true --branch=main
 
-echo "✅ Staging en ligne : https://ddw26-staging.pages.dev"
+echo "Staging en ligne : https://ddw26-staging.pages.dev"

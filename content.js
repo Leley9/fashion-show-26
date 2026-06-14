@@ -25,15 +25,15 @@ export const HOTSPOTS = [
   /* ════════════════════════════════ MODALE : INTRO ═══════════════════ */
   {
     id: 'intro',
-    title: 'DDW 26 — Défilé',
+    title: 'DDW 26 — Fashion Show',
     position: [2.0, 1.5, 4.6],
     color: '#ff5fae',
     note:
-      "Bienvenue dans notre espace.\n\n" +
-      "Un jardin-lounge coloré et accueillant : street wear technique, " +
-      "teintures végétales, seconde main, et l'idée d'écosystèmes qui " +
-      "nourrissent plutôt qu'ils ne détruisent.\n\n" +
-      "Baladez-vous : chaque bulle ouvre une partie de notre travail.",
+      "Welcome to our space.\n\n" +
+      "A colourful, welcoming garden-lounge: technical streetwear, " +
+      "plant-based dyes, second-hand pieces, and the idea of ecosystems that " +
+      "nourish rather than destroy.\n\n" +
+      "Wander around: each bubble opens a part of our work.",
 
     // ───── MÉDIAS (ajoutez vos fichiers ici) ─────
     images: [],
@@ -43,14 +43,14 @@ export const HOTSPOTS = [
   /* ════════════════════════════════ MODALE : BOUTIQUE ════════════════ */
   {
     id: 'shop',
-    title: 'La boutique — les pièces',
+    title: 'The shop — the pieces',
     position: [16.6, 1.3, 2.2],          // près du Clothes Hanger Cabinet
     color: '#7b5cff',
     note:
-      "Les 7 looks et accessoires.\n\n" +
-      "Costume revisité (la veste à spikes dans le dos), pièces techniques " +
-      "à zips, rubans, et la joaillerie de Becky.\n\n" +
-      "(Ajoutez ici les photos des portants et des pièces finies.)",
+      "The 7 looks and accessories.\n\n" +
+      "A reimagined suit (the spiked jacket on the back), technical pieces " +
+      "with zips, ribbons, and Becky's jewellery.\n\n" +
+      "(Add here the photos of the racks and the finished pieces.)",
 
     // ───── MÉDIAS (ajoutez vos fichiers ici) ─────
     images: [],                          // ex : ['assets/media/look-01.webp']
@@ -60,14 +60,14 @@ export const HOTSPOTS = [
   /* ════════════════════════════════ MODALE : ASSISES ════════════════ */
   {
     id: 'seating',
-    title: 'Les assises — le concept',
+    title: 'The seating — the concept',
     position: [6.5, 1.1, 0.9],           // près du Round Pillow
     color: '#00d6c2',
     note:
-      "Un espace public inclusif, pensé pour la rencontre.\n\n" +
-      "La performance s'approche d'une danse : chanson douce, mouvements " +
-      "lents, solos, trios, tous ensemble.\n\n" +
-      "(Notes d'intention, croquis d'ambiance, plan de la scéno.)",
+      "An inclusive public space, designed for encounters.\n\n" +
+      "The performance comes close to a dance: gentle song, slow " +
+      "movements, solos, trios, all together.\n\n" +
+      "(Intention notes, mood sketches, set design plan.)",
 
     // ───── MÉDIAS (ajoutez vos fichiers ici) ─────
     images: [],
@@ -77,14 +77,14 @@ export const HOTSPOTS = [
   /* ════════════════════════════════ MODALE : TEINTURE ═══════════════ */
   {
     id: 'dyeing',
-    title: 'Teinture végétale & fleurs',
+    title: 'Plant dyeing & flowers',
     position: [1.0, 1.4, 8.6],           // près du polstar, angle jardin
     color: '#ffd23f',
     note:
-      "Les nuances colorées viennent des plantes.\n\n" +
-      "Marc fait pousser des fleurs en Normandie, les utiliser pour " +
-      "teindre nos textiles et créer des couleurs vives et joyeuses? Quelles autres alternatives?\n\n" +
-      "(Photos du champ, des bains de teinture, des échantillons.)",
+      "The colourful shades come from plants.\n\n" +
+      "Marc grows flowers in Normandy — using them to " +
+      "dye our textiles and create bright, joyful colours? What other alternatives?\n\n" +
+      "(Photos of the field, the dye baths, the samples.)",
 
     // ───── MÉDIAS (ajoutez vos fichiers ici) ─────
     images: [],
@@ -94,14 +94,14 @@ export const HOTSPOTS = [
   /* ════════════════════════════════ MODALE : PROCESSUS ══════════════ */
   {
     id: 'process',
-    title: 'Le processus — atelier',
+    title: 'The process — studio',
     position: [9.0, 1.3, 4.5],           // centre de l'espace
     color: '#ff7847',
     note:
-      "Couture, patronage, sourcing textile : tout est documenté.\n\n" +
-      "Rens filme et photographie l'avancée. Un petit film sera disponible " +
-      "pendant la communication.\n\n" +
-      "Déposez ici vos photos/vidéos d'atelier au fil des mois.",
+      "Sewing, pattern-making, textile sourcing: everything is documented.\n\n" +
+      "Rens films and photographs the progress. A short film will be available " +
+      "during the communication.\n\n" +
+      "Drop your studio photos/videos here over the months.",
 
     // ───── MÉDIAS (photos studio compressées) ─────
     images: [

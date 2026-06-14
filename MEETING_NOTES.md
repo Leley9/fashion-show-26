@@ -145,3 +145,15 @@ Still discussing the song, will also depend on the next weeks and our first prod
 
 
 REFRESH Blender File Website : ./pipeline/watch-model.sh
+
+
+
+Récap — prod + staging opérationnels
+Production	Staging
+URL	https://ddw26.pages.dev     	https://ddw26-staging.pages.dev
+
+
+Projet Pages	ddw26	ddw26-staging
+Base KV	ddw26-NEWSLETTER	ddw26-NEWSLETTER_STAGING (isolée)
+Secrets	dédiés (.dev.vars)	dédiés (.dev.vars.staging)
+Déployer	./deploy.sh	./deploy-staging.sh

@@ -47,10 +47,10 @@ function setStatus(text, kind = '') {
 
 const ERRORS = {
   invalid_email:      'Hmm, that email looks off — mind checking it?',
-  captcha_required:   'Please tick the anti-robot box first 🌱',
+  captcha_required:   'Please tick the anti-robot box first.',
   captcha_failed:     'Anti-robot check failed — please try again.',
   captcha_replay:     'That check was already used — please tick it again.',
-  rate_limited:       'Whoa, slow down a little 🌿 — please try again later.',
+  rate_limited:       'Whoa, slow down a little — please try again later.',
   server_misconfigured: 'Our garden hose is disconnected. Try again later.',
   bad_request:        'Something went wrong — please try again.',
 };
@@ -62,7 +62,7 @@ form?.addEventListener('submit', async (e) => {
 
   const email = emailEl.value.trim();
   if (!email) return setStatus('Please enter your email.', 'err');
-  if (!altchaPayload) return setStatus('Please tick the anti-robot box first 🌱', 'err');
+  if (!altchaPayload) return setStatus('Please tick the anti-robot box first.', 'err');
 
   const submitBtn = form.querySelector('button[type=submit]');
   submitBtn.disabled = true;
@@ -82,7 +82,9 @@ form?.addEventListener('submit', async (e) => {
 
     if (res.ok && data.ok) {
       setStatus(
-        data.already ? "You're already growing with us 🌿" : "You're in! Welcome to the garden 🌱",
+        data.already
+          ? "You're already growing with us."
+          : "You're in! Welcome to the garden. Check your inbox for our hello — and peek in your spam folder just in case.",
         'ok',
       );
       form.reset();

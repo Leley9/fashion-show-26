@@ -9,7 +9,7 @@ générée au bruit de Perlin, à partir d'un modèle **Blender** compressé en 
 
 ---
 
-## 🚀 Lancer le site en local
+## Lancer le site en local
 
 Le site a besoin d'un petit serveur (les modules ES + le GLB ne marchent pas en `file://`) :
 
@@ -26,7 +26,7 @@ python3 -m http.server 8080
 
 ---
 
-## 📁 Structure
+## Structure
 
 | Chemin | Rôle |
 |---|---|
@@ -44,7 +44,7 @@ python3 -m http.server 8080
 
 ---
 
-## ✏️ Ajouter / modifier une photo ou vidéo
+## Ajouter / modifier une photo ou vidéo
 
 1. Déposer les fichiers bruts dans `assets/media/raw/`
 2. Lancer la compression :
@@ -60,7 +60,7 @@ python3 -m http.server 8080
 
 ---
 
-## 🔄 Mettre à jour le modèle 3D depuis Blender
+## Mettre à jour le modèle 3D depuis Blender
 
 Le modèle vient de `~/Desktop/FashionShow26.blend`.
 
@@ -78,7 +78,7 @@ Le pipeline exporte la scène (Blender headless) puis la compresse
 
 ---
 
-## 💾 Sauvegarder la progression
+## Sauvegarder la progression
 
 ```bash
 ./save.sh "ce que j'ai changé"
@@ -87,7 +87,7 @@ Le pipeline exporte la scène (Blender headless) puis la compresse
 
 ---
 
-## 🛠️ Outils requis
+## Outils requis
 
 - [Python 3](https://www.python.org/) — serveur local
 - [Blender 4.x](https://www.blender.org/) — pipeline modèle 3D

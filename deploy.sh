@@ -3,7 +3,7 @@
 #  deploy.sh — met le site en ligne sur Cloudflare Pages (projet ddw26)
 #  Usage :  ./deploy.sh
 #
-#  ⚠️ SÉCURITÉ : Cloudflare Pages publie TOUT le dossier, y compris les
+#  SÉCURITÉ : Cloudflare Pages publie TOUT le dossier, y compris les
 #  dotfiles (.dev.vars, .env…). On écarte donc TEMPORAIREMENT les fichiers
 #  sensibles + lourds avant l'upload, puis on les remet en place (trap).
 # =====================================================================
@@ -35,4 +35,4 @@ for f in "${SECRET_FILES[@]}"; do [ -e "$f" ] && mv "$f" "$HOLD/" || true; done
 # 2) déploie le dossier nettoyé
 $WRANGLER pages deploy . --project-name=ddw26 --commit-dirty=true --branch=main
 
-echo "✅ En ligne : https://ddw26.pages.dev"
+echo "En ligne : https://ddw26.pages.dev"

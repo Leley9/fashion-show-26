@@ -38,5 +38,5 @@ export async function onRequestGet({ request, env }) {
   if (token !== expected) return page('Invalid link', 'This unsubscribe link is not valid.');
 
   await env.NEWSLETTER.delete('sub:' + email);
-  return page('You’re unsubscribed 🌾', `${email} won’t receive our weekly note anymore. You can resubscribe anytime from the site.`);
+  return page('You’re unsubscribed', `${email} won’t receive our weekly note anymore. You can resubscribe anytime from the site.`);
 }

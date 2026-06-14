@@ -31,7 +31,7 @@ AUDIO_BITRATE=192k
 mkdir -p "$RAW" "$OUT"
 
 have() { command -v "$1" >/dev/null 2>&1; }
-have ffmpeg || { echo "❌ ffmpeg manquant : brew install ffmpeg"; exit 1; }
+have ffmpeg || { echo "ffmpeg manquant : brew install ffmpeg"; exit 1; }
 
 shopt -s nullglob 2>/dev/null || true
 count=0
@@ -50,11 +50,11 @@ for f in "$RAW"/*; do
         sips -s format png -Z "$IMG_MAXEDGE" "$f" --out "$tmp" >/dev/null 2>&1
         cwebp -quiet -q "$IMG_QUALITY" "$tmp" -o "$out"
         rm -f "$tmp"
-        echo "🖼️  $name → $stem.webp"
+        echo "$name → $stem.webp"
       else
         out="$OUT/$stem.jpg"           # repli : JPEG (universel)
         sips -s format jpeg -s formatOptions "$IMG_QUALITY" -Z "$IMG_MAXEDGE" "$f" --out "$out" >/dev/null 2>&1
-        echo "🖼️  $name → $stem.jpg (repli JPEG)"
+        echo "$name → $stem.jpg (repli JPEG)"
       fi
       count=$((count+1))
       ;;
@@ -64,23 +64,23 @@ for f in "$RAW"/*; do
         -vf "scale=-2:'min($VIDEO_MAXH,ih)'" \
         -c:v libx264 -preset slow -crf "$VIDEO_CRF" -pix_fmt yuv420p \
         -c:a aac -b:a 160k -movflags +faststart "$out"
-      echo "🎬  $name → $stem.mp4"
+      echo "$name → $stem.mp4"
       count=$((count+1))
       ;;
     wav|m4a|aac|flac|ogg|mp3)
       out="$OUT/$stem.mp3"
       ffmpeg -y -loglevel error -i "$f" -c:a libmp3lame -b:a "$AUDIO_BITRATE" "$out"
-      echo "🎵  $name → $stem.mp3"
+      echo "$name → $stem.mp3"
       count=$((count+1))
       ;;
     *)
-      echo "⏭️  ignoré (format non géré) : $name"
+      echo "ignoré (format non géré) : $name"
       ;;
   esac
 done
 
 if [ "$count" -eq 0 ]; then
-  echo "ℹ️  Rien à compresser. Déposez des fichiers dans : assets/media/raw/"
+  echo "Rien à compresser. Déposez des fichiers dans : assets/media/raw/"
 else
-  echo "✅ $count fichier(s) optimisé(s) dans assets/media/"
+  echo "$count fichier(s) optimisé(s) dans assets/media/"
 fi

@@ -21,7 +21,6 @@ export function renderEmail({ subject, contentHtml, unsubscribeUrl, siteUrl }) {
 
         <!-- Bandeau dégradé soleil -> feuille -->
         <tr><td style="background:linear-gradient(100deg,#ffd23f,#8be36b 55%,#2bd1c2);padding:30px 34px;">
-          <div style="font-size:22px;letter-spacing:2px;">🌱&nbsp;🌸&nbsp;🐝</div>
           <h1 style="margin:8px 0 0;font-size:24px;font-weight:800;color:#14250f;letter-spacing:.4px;">
             DDW 26 — The Purple Show
           </h1>
@@ -37,7 +36,7 @@ export function renderEmail({ subject, contentHtml, unsubscribeUrl, siteUrl }) {
           <p style="margin:0 0 6px;">
             You’re receiving this because you subscribed on
             <a href="${siteUrl}" style="color:#2f9e57;text-decoration:none;">our site</a>.
-            Grown without trackers. 🌾
+            Grown without trackers.
           </p>
           <p style="margin:0;">
             <a href="${unsubscribeUrl}" style="color:#6c7a5f;text-decoration:underline;">Unsubscribe</a>

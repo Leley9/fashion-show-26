@@ -13,10 +13,10 @@ MSG="${*:-Mise à jour $(date '+%Y-%m-%d %H:%M')}"
 
 git add -A
 if git diff --cached --quiet; then
-  echo "ℹ️  Rien à sauvegarder (aucun changement)."
+  echo "Rien à sauvegarder (aucun changement)."
   exit 0
 fi
 
 git commit -m "$MSG"
 git push
-echo "✅ Progression sauvegardée et poussée sur GitHub."
+echo "Progression sauvegardée et poussée sur GitHub."

@@ -1,4 +1,4 @@
-# This week in the garden 🌱
+# This week in the garden
 
 Hi friend,
 
@@ -19,7 +19,7 @@ Here's what grew on our side this week — on the site and in the studio.
 Come wander around anytime: it keeps growing.
 
 With sun,
-The Purple Show crew 🌸🐝
+The Purple Show crew
 
 ---
 *The first line above (`# ...`) becomes the email subject. Edit this file each

@@ -1,4 +1,4 @@
-# 🌱 Newsletter — guide d'installation
+# Newsletter — guide d'installation
 
 Newsletter solarpunk pour **DDW 26 — The Purple Show** :
 inscription anti-robot **ALTCHA** + backend **Cloudflare Pages** + envoi hebdo via **Gmail**.
@@ -45,7 +45,7 @@ openssl rand -hex 32   # -> ALTCHA_HMAC_KEY
 openssl rand -hex 24   # -> ADMIN_TOKEN
 ```
 
-> ⚠️ La **même** `ALTCHA_HMAC_KEY` doit être posée à deux endroits : sur Cloudflare
+> La **même** `ALTCHA_HMAC_KEY` doit être posée à deux endroits : sur Cloudflare
 > (secret) **et** dans ton `.env` local (pour signer les liens de désinscription).
 
 ---
@@ -80,7 +80,7 @@ npx wrangler pages secret put ADMIN_TOKEN       # colle le jeton de 48 car.
 > Alternative clic-bouton : dashboard Cloudflare → **Workers & Pages → ddw26 →
 > Settings → Variables and Secrets**.
 
-✅ À ce stade, l'inscription marche déjà sur le site déployé.
+À ce stade, l'inscription marche déjà sur le site déployé.
 
 ---
 
@@ -104,7 +104,7 @@ ALTCHA, inscris une adresse de test.
 2. Va sur **https://myaccount.google.com/apppasswords** → crée un mot de passe
    d'application (16 caractères). C'est lui, pas ton mot de passe normal.
 
-### b) Adresse d'expédition (ta question sur le spam 📬)
+### b) Adresse d'expédition (ta question sur le spam)
 
 Gmail n'envoie **que** depuis une adresse qu'il possède. Trois options :
 
@@ -114,7 +114,7 @@ Gmail n'envoie **que** depuis une adresse qu'il possède. Trois options :
 | **B. Alias « Send mail as »** | une adresse d'un domaine à toi | Gmail → Paramètres → Comptes → *Envoyer des e-mails en tant que* (à vérifier) |
 | C. Ton Gmail perso | `l.germanangue@gmail.com` | zéro effort, mais l'adresse est visible des abonnés |
 
-> ❌ `purpleshow@contact.com` ne marchera pas : ce domaine ne t'appartient pas,
+> `purpleshow@contact.com` ne marchera pas : ce domaine ne t'appartient pas,
 > l'envoi serait rejeté ou classé en spam. Pour une adresse `@tondomaine`, il faut
 > posséder le domaine **et** le configurer en alias (option B).
 

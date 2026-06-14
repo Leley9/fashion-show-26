@@ -14,9 +14,9 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 BLEND="${1:-$HOME/Desktop/FashionShow26.blend}"
 UPDATE="$DIR/update-model.sh"
 
-[ -f "$BLEND" ] || { echo "❌ .blend introuvable : $BLEND"; exit 1; }
+[ -f "$BLEND" ] || { echo ".blend introuvable : $BLEND"; exit 1; }
 
-echo "👀 Surveillance de : $BLEND"
+echo "Surveillance de : $BLEND"
 echo "   (enregistrez dans Blender pour déclencher la mise à jour · Ctrl+C pour arrêter)"
 echo ""
 
@@ -34,7 +34,7 @@ if command -v fswatch >/dev/null 2>&1; then
   done
 else
   # Repli sans dépendance : on compare la date de modif toutes les 2 s
-  echo "ℹ️  (astuce : 'brew install fswatch' pour une détection instantanée)"
+  echo "(astuce : 'brew install fswatch' pour une détection instantanée)"
   last="$(stat -f %m "$BLEND")"
   while true; do
     sleep 2

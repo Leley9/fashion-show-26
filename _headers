@@ -1,0 +1,24 @@
+# =====================================================================
+#  _headers — en-têtes HTTP servis par Cloudflare Pages
+#  (racine du site = pages_build_output_dir dans wrangler.toml)
+# ---------------------------------------------------------------------
+#  But : que la 2e visite (et les rechargements) ne re-téléchargent PAS
+#  les ~10 Mo du modèle 3D.
+#
+#  Pourquoi PAS "immutable" : space.glb / space-mobile.glb sont réécrits
+#  EN PLACE par pipeline/update-model.sh (même nom de fichier, pas de
+#  hash). "immutable" figerait donc le modèle chez les visiteurs jusqu'à
+#  1 an après un déploiement. On choisit à la place :
+#    • max-age=3600          -> frais 1 h : rechargements de session = instantanés
+#    • stale-while-revalidate-> on ressert l'ancien tout de suite ET on
+#                               rafraîchit en tâche de fond (donc jamais d'attente)
+#  Conséquence : un nouveau modèle peut mettre jusqu'à ~1 h à se propager.
+#  (Si un jour on versionne le nom du fichier -> passer en immutable, 1 an.)
+# =====================================================================
+
+/3D/*.glb
+  Cache-Control: public, max-age=3600, stale-while-revalidate=604800
+
+# Le manifeste (tailles exactes pour la barre) doit suivre le modèle de près.
+/3D/*.manifest.json
+  Cache-Control: public, max-age=300, stale-while-revalidate=3600
