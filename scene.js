@@ -41,6 +41,14 @@ const eqTex = new THREE.CanvasTexture(env.canvas);
 eqTex.mapping = THREE.EquirectangularReflectionMapping;
 eqTex.colorSpace = THREE.SRGBColorSpace;
 
+// ENVIRONNEMENT FIGÉ : on calcule la HDRI UNE seule fois, sur une frame
+// choisie (FROZEN_T), puis on n'y touche plus. Plus de PMREM par frame
+// = plus de surchauffe sur les ordis/téléphones. Change FROZEN_T pour
+// "tomber" sur un autre instant du bruit si la compo ne te plaît pas.
+const FROZEN_T = 12.0;
+env.render(FROZEN_T);
+eqTex.needsUpdate = true;
+
 const pmrem = new THREE.PMREMGenerator(renderer);
 let envRT = pmrem.fromEquirectangular(eqTex);
 scene.environment = envRT.texture;
@@ -365,7 +373,6 @@ fly.addEventListener('unlock', () => {
    BOUCLE DE RENDU
    =================================================================== */
 const clock = new THREE.Clock();
-let envAcc = 0, pmremAcc = 0;
 
 function animate() {
   requestAnimationFrame(animate);
@@ -380,20 +387,9 @@ function animate() {
     s.scale.setScalar(s.userData.base * (1 + Math.sin(t * 2 + s.position.x) * 0.12));
   }
 
-  envAcc += dt;
-  if (envAcc > 0.08) {
-    env.render(t * 0.06);
-    eqTex.needsUpdate = true;
-    envAcc = 0;
-    pmremAcc += 0.08;
-    if (pmremAcc > 0.32) {
-      const rt = pmrem.fromEquirectangular(eqTex);
-      scene.environment = rt.texture;
-      envRT.dispose();
-      envRT = rt;
-      pmremAcc = 0;
-    }
-  }
+  // HDRI Perlin FIGÉE : plus aucun recalcul ici (cf. FROZEN_T plus haut).
+  // C'était ce bloc — render() du canvas + fromEquirectangular() (PMREM) —
+  // qui faisait chauffer les machines en tournant ~3×/seconde.
 
   renderer.render(scene, camera);
 }

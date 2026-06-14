@@ -82,8 +82,8 @@ export const HOTSPOTS = [
     color: '#ffd23f',
     note:
       "Les nuances colorées viennent des plantes.\n\n" +
-      "Marc fait pousser des betteraves et des fleurs en Normandie pour " +
-      "teindre nos textiles — couleurs vives et joyeuses.\n\n" +
+      "Marc fait pousser des fleurs en Normandie, les utiliser pour " +
+      "teindre nos textiles et créer des couleurs vives et joyeuses? Quelles autres alternatives?\n\n" +
       "(Photos du champ, des bains de teinture, des échantillons.)",
 
     // ───── MÉDIAS (ajoutez vos fichiers ici) ─────

@@ -50,12 +50,12 @@ class Perlin {
    C'est TA palette — change ces RGB pour changer l'ambiance de la lumière. */
    
 const PALETTE = [
-  [  8,  20,  55],   // bleu nuit profond (creux)
-  [ 20,  65, 150],   // bleu franc
-  [ 25, 120, 220],   // azur
-  [ 55, 190, 245],   // cyan lumineux
-  [150, 230, 255],   // cyan clair
-  [245, 252, 255],   // écume (crêtes)
+  [ 22,   6,  40],   // violet nuit profond (creux)
+  [ 60,  18,  95],   // pourpre sombre
+  [105,  35, 165],   // violet franc
+  [150,  70, 220],   // améthyste lumineux
+  [195, 135, 245],   // lilas clair
+  [240, 220, 255],   // lavande pâle (crêtes)
 ];
 
 function ramp(n) {
@@ -89,6 +89,15 @@ export function makePerlinEnv({ width = 256, height = 128 } = {}) {
   }
 
   const SCALE = 0.018;
+  // CONTRASTE du dégradé : étire n autour de 0,5 avec une courbe en S
+  // (smoothstep). On MÉLANGE la version contrastée à l'originale selon
+  // CONTRAST : 0 = palette plate (valeurs tassées au milieu, dégradé fade),
+  // 1 = contraste max (creux sombres, crêtes lumineuses). Dose entre les deux.
+  const CONTRAST = 0.8;
+  function punch(n) {
+    const s = n * n * (3 - 2 * n);      // smoothstep : tasse vers 0 et 1
+    return n + (s - n) * CONTRAST;      // lerp(n, s, CONTRAST)
+  }
 
   function render(t) {
     const d = img.data;
@@ -98,7 +107,7 @@ export function makePerlinEnv({ width = 256, height = 128 } = {}) {
       const sky = 1 - y / height;                 // 1 en haut, 0 en bas
       const skyBoost = 0.55 + sky * 0.7;
       for (let x = 0; x < width; x++) {
-        const n = (fractal(x * SCALE, y * SCALE, t) + 1) / 2;
+        const n = punch((fractal(x * SCALE, y * SCALE, t) + 1) / 2);
         let [r, g, b] = ramp(n);
         r *= skyBoost; g *= skyBoost; b *= skyBoost;
         const i = (y * width + x) * 4;
