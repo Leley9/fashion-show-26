@@ -11,7 +11,7 @@ pages_build_output_dir = "."
 # Remplace "id" par l'identifiant réel après :  npx wrangler kv namespace create NEWSLETTER
 [[kv_namespaces]]
 binding = "NEWSLETTER"
-id = "REMPLACE_PAR_TON_ID_KV"
+id = "f6a4e392d5a240be86c32bd47880048b"
 
 # --- Secrets (NE PAS mettre les valeurs ici) ---
 # À définir dans le dashboard Cloudflare (Pages > Settings > Variables) ou via :
