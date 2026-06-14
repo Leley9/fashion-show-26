@@ -1,7 +1,20 @@
-name = "ddw26-staging"
+# =====================================================================
+#  Cloudflare Pages — config du site + des Functions (l'API newsletter)
+# =====================================================================
+name = "ddw26"
 compatibility_date = "2024-11-01"
+
+# Le site est statique à la racine ; les Functions vivent dans ./functions
 pages_build_output_dir = "."
 
+# --- Stockage des abonnés (Workers KV) ---
+# Remplace "id" par l'identifiant réel après :  npx wrangler kv namespace create NEWSLETTER
 [[kv_namespaces]]
 binding = "NEWSLETTER"
-id = "0f2f393c93cb4f6182f18eb7728acba8"
+id = "f6a4e392d5a240be86c32bd47880048b"
+
+# --- Secrets (NE PAS mettre les valeurs ici) ---
+# À définir dans le dashboard Cloudflare (Pages > Settings > Variables) ou via :
+#   npx wrangler pages secret put ALTCHA_HMAC_KEY
+#   npx wrangler pages secret put ADMIN_TOKEN
+# En local, ils sont lus depuis .dev.vars (voir .dev.vars.example).

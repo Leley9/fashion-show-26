@@ -32,8 +32,8 @@ const dom = renderer.domElement;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.05, 200);
-camera.position.set(2.0, 1.6, 4.6);
-camera.lookAt(10, 1.4, 4.6);
+camera.position.set(2.0, 1.6, 2.4);   // décalée vers la gauche (axe z)
+camera.lookAt(10, 1.4, 4.6);           // même cible -> vue prise de biais
 
 /* ---------- HDRI Perlin (lumière + fond irisé) ---------- */
 const env = makePerlinEnv({ width: 256, height: 128 });
