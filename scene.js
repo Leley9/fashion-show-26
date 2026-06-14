@@ -58,6 +58,17 @@ const loader = new GLTFLoader().setDRACOLoader(draco);
 
 const loaderBar = document.getElementById('loader-bar');
 const loaderEl = document.getElementById('loader');
+const loaderPct = document.getElementById('loader-pct');
+const loaderStatus = document.getElementById('loader-status');
+
+// Étapes de statut affichées selon l'avancement (en anglais)
+function statusFor(p) {
+  if (p < 25) return 'Entering the space';
+  if (p < 55) return 'Unfolding the runway';
+  if (p < 85) return 'Dressing the lights';
+  if (p < 100) return 'Almost on stage';
+  return 'Welcome';
+}
 
 let SCENE_CENTER = new THREE.Vector3(8.7, 0.5, 4.5);
 let SCENE_RADIUS = 10;
@@ -75,13 +86,26 @@ loader.load(
     orbit.maxDistance = SCENE_RADIUS * 4;
     orbit.update();
     buildHotspots();
-    loaderEl.classList.add('hidden');
+    // Pousse la barre à 100% puis fond enchaîné une fois la scène prête
+    loaderBar.style.width = '100%';
+    if (loaderPct) loaderPct.innerHTML = '100<small>%</small>';
+    if (loaderStatus) loaderStatus.textContent = statusFor(100);
+    setTimeout(() => loaderEl.classList.add('hidden'), 450);
     setMode('orbit');                      // démarre en mode Orbite
   },
   (e) => {
-    if (e.lengthComputable) loaderBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
+    if (!e.lengthComputable) return;
+    const p = Math.round((e.loaded / e.total) * 100);
+    loaderBar.style.width = p + '%';
+    if (loaderPct) loaderPct.innerHTML = p + '<small>%</small>';
+    if (loaderStatus) loaderStatus.textContent = statusFor(p);
   },
-  (err) => { loaderEl.innerHTML = '<p>Erreur de chargement du modèle 3D.<br>' + err + '</p>'; }
+  (err) => {
+    if (loaderStatus) loaderStatus.textContent = 'Could not load the space';
+    loaderEl.innerHTML = '<div class="loader-aurora"></div><div class="loader-core">'
+      + '<h1 class="loader-wordmark" data-text="Oops">Oops</h1>'
+      + '<p class="loader-status">The 3D space failed to load.<br>' + err + '</p></div>';
+  }
 );
 
 /* ===================================================================

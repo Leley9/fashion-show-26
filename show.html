@@ -11,6 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 
+  <!-- Widget anti-robot ALTCHA (preuve de travail, sans pistage ni Google) -->
+  <script async defer type="module" src="https://cdn.jsdelivr.net/npm/altcha@1/dist/altcha.min.js"></script>
+
   <!-- Indique au navigateur où trouver Three.js (modules ES via CDN) -->
   <script type="importmap">
   {
@@ -38,7 +41,7 @@
 
   <!-- Footer : actions secondaires (boutons vides, sans JS) -->
   <footer id="site-footer">
-    <button type="button">Subscribe to the newsletter</button>
+    <button id="newsletter-btn" type="button">Subscribe to the newsletter</button>
     <button type="button">Contact us</button>
   </footer>
 
@@ -47,9 +50,23 @@
 
   <!-- Écran de chargement -->
   <div id="loader">
-    <h1>DDW 26 — Défilé</h1>
-    <p class="sub">Chargement de l'espace…</p>
-    <div id="loader-track"><div id="loader-bar"></div></div>
+    <div class="loader-aurora"></div>
+    <div class="loader-grain"></div>
+
+    <div class="loader-core">
+      <span class="loader-kicker">Dutch Design Week · Eindhoven 2026</span>
+      <h1 class="loader-wordmark" data-text="THE PURPLE SHOW">THE PURPLE SHOW</h1>
+
+      <div class="loader-meter">
+        <div id="loader-track"><div id="loader-bar"></div></div>
+        <div class="loader-readout">
+          <span id="loader-status" class="loader-status">Entering the space</span>
+          <span id="loader-pct" class="loader-pct">0<small>%</small></span>
+        </div>
+      </div>
+    </div>
+
+    <span class="loader-foot">Best with sound on · move with your mouse</span>
   </div>
 
   <!-- Invitation à entrer (gère le pointer lock en mode Vol) -->
@@ -92,6 +109,38 @@
     </div>
   </div>
 
+  <!-- Modale Newsletter (solarpunk) — ouverte par le bouton du footer -->
+  <div id="newsletter-modal">
+    <div class="nl-panel">
+      <button id="nl-close" type="button" aria-label="Close">✕</button>
+
+      <div class="nl-art" aria-hidden="true">🌱&nbsp;🌸&nbsp;🐝</div>
+      <h2>Grow with us</h2>
+      <p class="nl-sub">
+        One short note a week — what we just built on the site and how the
+        show is coming to life. No spam, only sunlight.
+      </p>
+
+      <form id="nl-form" novalidate>
+        <input id="nl-email" name="email" type="email"
+               placeholder="you@example.com" autocomplete="email" required>
+
+        <!-- Champ piège anti-robot : invisible pour un humain, ignoré au clavier -->
+        <input class="nl-hp" name="website" type="text"
+               tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <!-- Widget ALTCHA : récupère un défi signé sur /api/altcha et le résout -->
+        <altcha-widget id="nl-altcha" challengeurl="/api/altcha" hidefooter></altcha-widget>
+
+        <button type="submit">Subscribe</button>
+        <p id="nl-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <p class="nl-fine">One short email a week from The Purple Show · unsubscribe anytime.</p>
+    </div>
+  </div>
+
+  <script type="module" src="newsletter.js"></script>
   <script type="module" src="scene.js"></script>
 </body>
 </html>

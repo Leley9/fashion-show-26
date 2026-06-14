@@ -1,0 +1,13 @@
+# =====================================================================
+#  Secrets LOCAUX pour `npm run dev` (wrangler pages dev).
+#  Copie ce fichier en .dev.vars (jamais commité).
+#  En production, ces valeurs se mettent dans le dashboard Cloudflare.
+# =====================================================================
+
+# Clé pour signer les défis ALTCHA + les liens de désinscription.
+# Génère-la une fois :  openssl rand -hex 32
+ALTCHA_HMAC_KEY=colle_ici_une_cle_aleatoire_de_64_caracteres
+
+# Jeton qui protège GET /api/export (liste des abonnés).
+# Génère-le une fois :  openssl rand -hex 24
+ADMIN_TOKEN=colle_ici_un_jeton_aleatoire

@@ -15,3 +15,11 @@ assets/media/raw/*
 
 # Dépendances éventuelles
 node_modules/
+
+# Newsletter — secrets, NE JAMAIS commiter
+.env
+.dev.vars
+newsletter/subscribers.txt
+
+# Cloudflare / Wrangler
+.wrangler/

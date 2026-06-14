@@ -1,0 +1,19 @@
+{
+  "name": "ddw26-purple-show",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "DDW 26 — The Purple Show: site 3D + newsletter (ALTCHA + Cloudflare + Gmail)",
+  "scripts": {
+    "dev": "wrangler pages dev .",
+    "deploy": "wrangler pages deploy .",
+    "newsletter": "node --env-file=.env newsletter/send.mjs"
+  },
+  "dependencies": {
+    "marked": "^12.0.0",
+    "nodemailer": "^6.9.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.80.0"
+  }
+}
