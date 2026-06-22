@@ -15,6 +15,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { ViewHelper } from './lib/ViewHelper.js';
 import { makePerlinEnv } from './hdri.js';
 import { HOTSPOTS } from './content.js';
 
@@ -302,6 +303,26 @@ if (isTouch) {
   orbit.dampingFactor = 0.12;   // glissé qui se prolonge un peu après le doigt
 }
 
+/* ---------- Gizmo d'axes interactif (façon Blender) ----------
+   Pastilles X/Y/Z en haut à droite : un clic/tap snappe la caméra sur l'axe
+   correspondant (animation fluide). Tourne autour de orbit.target — on PARTAGE
+   la référence pour que le snap vise toujours le point regardé, pas l'origine. */
+const viewHelper = new ViewHelper(camera, dom);
+viewHelper.center = orbit.target;
+// Plus petit et plus haut sur mobile (le bouton Mode y est masqué) ; sous le
+// bouton Mode sur desktop (top:70 + ~36 de hauteur).
+if (isMobile) { viewHelper.dim = 108; viewHelper.marginTop = 70; viewHelper.marginRight = 10; }
+else          { viewHelper.dim = 136; viewHelper.marginTop = 112; viewHelper.marginRight = 20; }
+
+// Zone DOM transparente posée EXACTEMENT sur le gizmo : capte le clic/tap et le
+// relaie à handleClick (qui recalcule les coords depuis le canvas). Hors de
+// cette zone, le canvas garde l'orbite/zoom normalement.
+const gizmoEl = document.getElementById('view-gizmo');
+gizmoEl.style.width = gizmoEl.style.height = viewHelper.dim + 'px';
+gizmoEl.style.top = viewHelper.marginTop + 'px';
+gizmoEl.style.right = viewHelper.marginRight + 'px';
+gizmoEl.addEventListener('pointerup', (e) => viewHelper.handleClick(e));
+
 const off = new THREE.Vector3();
 const sph = new THREE.Spherical();
 
@@ -384,6 +405,7 @@ function setMode(m) {
     reticle.classList.add('hidden');
     help.classList.add('hidden');
     numpadHelp.classList.remove('hidden');
+    gizmoEl.classList.remove('hidden');
     modeBtn.textContent = 'Mode: Orbit';
     dom.style.cursor = 'grab';
   } else {
@@ -391,6 +413,7 @@ function setMode(m) {
     reticle.classList.remove('hidden');
     help.classList.remove('hidden');
     numpadHelp.classList.add('hidden');
+    gizmoEl.classList.add('hidden');
     modeBtn.textContent = 'Mode: Fly';
     dom.style.cursor = 'default';
     if (!modal.classList.contains('open')) intro.classList.remove('hidden');
@@ -553,13 +576,21 @@ fly.addEventListener('unlock', () => {
    =================================================================== */
 const clock = new THREE.Clock();
 
+// autoClear OFF : on efface nous-mêmes une fois par frame. Le gizmo se rend
+// ensuite dans son coin (clearDepth uniquement) PAR-DESSUS la scène sans
+// l'effacer — c'est la mécanique attendue par ViewHelper.
+renderer.autoClear = false;
+
 function animate() {
   requestAnimationFrame(animate);
   const dt = clock.getDelta();
   const t = clock.elapsedTime;
 
   flyStep(dt);
-  if (mode === 'orbit') orbit.update();
+  // Pendant le snap du gizmo, il pilote la caméra : on met orbit en pause pour
+  // ne pas se battre avec lui (sinon damping vs slerp = saccades).
+  if (viewHelper.animating) viewHelper.update(dt);
+  else if (mode === 'orbit') orbit.update();
   pick();
 
   for (const s of hotspotGroup.children) {
@@ -570,7 +601,9 @@ function animate() {
   // C'était ce bloc — render() du canvas + fromEquirectangular() (PMREM) —
   // qui faisait chauffer les machines en tournant ~3×/seconde.
 
+  renderer.clear();
   renderer.render(scene, camera);
+  viewHelper.render(renderer);
 }
 animate();
 
