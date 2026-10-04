@@ -16,7 +16,7 @@ set -uo pipefail
 
 PROJECT="$(cd "$(dirname "$0")/.." && pwd)"
 BLEND="${1:-$HOME/Desktop/FashionShow26.blend}"
-BLENDER="/Applications/Blender.app/Contents/MacOS/Blender"
+BLENDER="/Applications/Blender 2.app/Contents/MacOS/Blender"
 OUT="$PROJECT/3D/space.glb"                 # variante desktop (textures 2048)
 OUT_MOBILE="$PROJECT/3D/space-mobile.glb"   # variante mobile  (textures 1024)
 MANIFEST="$PROJECT/3D/space.manifest.json"  # tailles exactes -> barre fluide

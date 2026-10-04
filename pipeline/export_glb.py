@@ -14,6 +14,10 @@ bpy.ops.export_scene.gltf(
     export_apply=True,          # applique les modifiers
     export_yup=True,            # Y vers le haut (convention three.js)
     export_cameras=False,
-    export_lights=False,
+    export_lights=True,         # EXPORT DES LUMIÈRES activé
+    export_animations=True,    # EXPORT DES ANIMATIONS activé
+    export_materials='EXPORT', # exporte les matériaux
+    export_normals=True,       # exporte les normales
+    export_tangents=False,     # pas besoin pour ce projet
 )
 print(f"[export_glb] GLB écrit : {out}")
