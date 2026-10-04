@@ -143,8 +143,8 @@ let SCENE_RADIUS = 10;
 const MODEL_PATH = isMobile ? '3D/space-mobile.glb' : '3D/space.glb';
 const MODEL_URL = MODEL_PATH;
 
-// URL de fallback (GitHub Pages)
-const FALLBACK_BASE = 'https://leley9.github.io/fashion-show-26';
+// URL de fallback (GitHub raw - toujours à jour)
+const FALLBACK_BASE = 'https://raw.githubusercontent.com/Leley9/fashion-show-26/main';
 const FALLBACK_URL = isMobile ? `${FALLBACK_BASE}/3D/space-mobile.glb` : `${FALLBACK_BASE}/3D/space.glb`;
 
 // Progression de la barre, pilotée par les OCTETS RÉELLEMENT REÇUS.
@@ -210,10 +210,12 @@ function tryLoadModel() {
     if (loaderStatus) loaderStatus.textContent = 'Could not load the space';
     loaderEl.innerHTML = '<div class="loader-core">'
       + '<h1 class="loader-wordmark">Oops</h1>'
-      + '<p class="loader-status">The 3D space failed to load.</p></div>';
+      + '<p class="loader-status">The 3D space failed to load. Try again later.</p></div>';
+    console.error('Tous les URLs de modèle ont échoué :', MODEL_URLS);
     return;
   }
   
+  console.log(`Tentative de chargement : ${MODEL_URLS[currentModelIndex]}`);
   loader.load(
     MODEL_URLS[currentModelIndex],
     (gltf) => {
