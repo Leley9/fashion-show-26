@@ -28,7 +28,13 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.18;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-document.getElementById('app').appendChild(renderer.domElement);
+const appEl = document.getElementById('app');
+if (appEl) {
+  appEl.appendChild(renderer.domElement);
+} else {
+  console.error('scene.js: élément #app introuvable');
+  document.body.appendChild(renderer.domElement); // fallback
+}
 const dom = renderer.domElement;
 
 const scene = new THREE.Scene();
@@ -133,7 +139,13 @@ let SCENE_RADIUS = 10;
 // Variante du modèle : mobile = GLB plus léger (textures 1024), desktop =
 // pleine qualité (textures 2048). Les deux sont produits par le même export
 // Blender (cf. pipeline/update-model.sh) -> géométrie identique.
-const MODEL_URL = isMobile ? '3D/space-mobile.glb' : '3D/space.glb';
+// Fallback vers GitHub Pages si le chemin relatif échoue
+const MODEL_PATH = isMobile ? '3D/space-mobile.glb' : '3D/space.glb';
+const MODEL_URL = MODEL_PATH;
+
+// URL de fallback (GitHub Pages)
+const FALLBACK_BASE = 'https://leley9.github.io/fashion-show-26';
+const FALLBACK_URL = isMobile ? `${FALLBACK_BASE}/3D/space-mobile.glb` : `${FALLBACK_BASE}/3D/space.glb`;
 
 // Progression de la barre, pilotée par les OCTETS RÉELLEMENT REÇUS.
 // Le serveur (dev en "chunked", parfois la prod) omet souvent Content-Length :
@@ -189,21 +201,34 @@ function finishLoader() {
   })();
 }
 
-loader.load(
-  MODEL_URL,
-  (gltf) => {
-    scene.add(gltf.scene);
-    
-    // === ANIMATIONS === 
-    if (gltf.animations && gltf.animations.length > 0) {
-      window.animationMixer = new THREE.AnimationMixer(gltf.scene);
-      gltf.animations.forEach((clip) => {
-        window.animationMixer.clipAction(clip).play();
-      });
-    }
-    
-    // Centre / rayon de la scène -> pour cadrer l'orbite
-    const box = new THREE.Box3().setFromObject(gltf.scene);
+// URLs à essayer dans l'ordre
+const MODEL_URLS = [MODEL_PATH, FALLBACK_URL];
+let currentModelIndex = 0;
+
+function tryLoadModel() {
+  if (currentModelIndex >= MODEL_URLS.length) {
+    if (loaderStatus) loaderStatus.textContent = 'Could not load the space';
+    loaderEl.innerHTML = '<div class="loader-core">'
+      + '<h1 class="loader-wordmark">Oops</h1>'
+      + '<p class="loader-status">The 3D space failed to load.</p></div>';
+    return;
+  }
+  
+  loader.load(
+    MODEL_URLS[currentModelIndex],
+    (gltf) => {
+      scene.add(gltf.scene);
+      
+      // === ANIMATIONS === 
+      if (gltf.animations && gltf.animations.length > 0) {
+        window.animationMixer = new THREE.AnimationMixer(gltf.scene);
+        gltf.animations.forEach((clip) => {
+          window.animationMixer.clipAction(clip).play();
+        });
+      }
+      
+      // Centre / rayon de la scène -> pour cadrer l'orbite
+      const box = new THREE.Box3().setFromObject(gltf.scene);
     box.getCenter(SCENE_CENTER);
     SCENE_RADIUS = box.getSize(new THREE.Vector3()).length() / 2;
     // Position de départ choisie sur l'appareil (le cadrage que tu aimes)...
@@ -226,22 +251,25 @@ loader.load(
     orbit.update();
     buildHotspots();
     // Tween fluide vers 100% puis fondu une fois la scène prête.
-    finishLoader();
-    setMode('orbit');                      // démarre en mode Orbite
-  },
-  (e) => {
-    // e.loaded = octets reçus (toujours fourni). e.total n'est dispo que si
-    // le serveur envoie Content-Length ; on s'en sert alors comme taille exacte.
-    loadedBytes = e.loaded;
-    if (e.lengthComputable && e.total) knownTotal = e.total;
-  },
-  (err) => {
-    if (loaderStatus) loaderStatus.textContent = 'Could not load the space';
-    loaderEl.innerHTML = '<div class="loader-core">'
-      + '<h1 class="loader-wordmark">Oops</h1>'
-      + '<p class="loader-status">The 3D space failed to load.<br>' + err + '</p></div>';
-  }
-);
+      finishLoader();
+      setMode('orbit');                      // démarre en mode Orbite
+    },
+    (e) => {
+      // e.loaded = octets reçus (toujours fourni). e.total n'est dispo que si
+      // le serveur envoie Content-Length ; on s'en sert alors comme taille exacte.
+      loadedBytes = e.loaded;
+      if (e.lengthComputable && e.total) knownTotal = e.total;
+    },
+    (err) => {
+      console.warn(`Échec du chargement de ${MODEL_URLS[currentModelIndex]}:`, err);
+      currentModelIndex++;
+      tryLoadModel();
+    }
+  );
+}
+
+// Démarrer le chargement
+tryLoadModel();
 
 /* ===================================================================
    CONTRÔLES
@@ -327,10 +355,12 @@ else          { viewHelper.dim = 136; viewHelper.marginTop = 112; viewHelper.mar
 // relaie à handleClick (qui recalcule les coords depuis le canvas). Hors de
 // cette zone, le canvas garde l'orbite/zoom normalement.
 const gizmoEl = document.getElementById('view-gizmo');
-gizmoEl.style.width = gizmoEl.style.height = viewHelper.dim + 'px';
-gizmoEl.style.top = viewHelper.marginTop + 'px';
-gizmoEl.style.right = viewHelper.marginRight + 'px';
-gizmoEl.addEventListener('pointerup', (e) => viewHelper.handleClick(e));
+if (gizmoEl) {
+  gizmoEl.style.width = gizmoEl.style.height = viewHelper.dim + 'px';
+  gizmoEl.style.top = viewHelper.marginTop + 'px';
+  gizmoEl.style.right = viewHelper.marginRight + 'px';
+  gizmoEl.addEventListener('pointerup', (e) => viewHelper.handleClick(e));
+}
 
 const off = new THREE.Vector3();
 const sph = new THREE.Spherical();
@@ -518,6 +548,12 @@ function pick() {
 const modal = document.getElementById('modal');
 const modalContent = document.getElementById('modal-content');
 
+// Sécurité : si les éléments DOM nécessaires n'existent pas, on arrête
+if (!modal || !modalContent) {
+  console.error('scene.js: éléments DOM manquants (modal, modal-content)');
+  // On pourrait afficher un message d'erreur ou rediriger
+}
+
 function mediaHTML(h) {
   let html = '';
   for (const src of (h.images || [])) html += `<img loading="lazy" src="${src}" alt="">`;
@@ -539,11 +575,16 @@ function openModal(h) {
   if (mode === 'fly') fly.unlock();
 }
 function closeModal() { modal.classList.remove('open'); }
-document.getElementById('modal-close').addEventListener('click', () => {
-  closeModal();
-  if (mode === 'fly') fly.lock();
-});
-modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+const modalClose = document.getElementById('modal-close');
+if (modalClose) {
+  modalClose.addEventListener('click', () => {
+    closeModal();
+    if (mode === 'fly') fly.lock();
+  });
+}
+if (modal) {
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+}
 
 /* ---------- Clic / tap = ouvrir une bulle (clic franc, pas un drag) ---------- */
 // Raycast PONCTUEL à un point écran donné : fiable au doigt (où il n'y a
