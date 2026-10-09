@@ -139,13 +139,17 @@ let SCENE_RADIUS = 10;
 // Variante du modèle : mobile = GLB plus léger (textures 1024), desktop =
 // pleine qualité (textures 2048). Les deux sont produits par le même export
 // Blender (cf. pipeline/update-model.sh) -> géométrie identique.
-// Fallback vers GitHub Pages si le chemin relatif échoue
-const MODEL_PATH = isMobile ? '3D/space-mobile.glb' : '3D/space.glb';
-const MODEL_URL = MODEL_PATH;
-
-// URL de fallback (GitHub raw - toujours à jour)
-const FALLBACK_BASE = 'https://raw.githubusercontent.com/Leley9/fashion-show-26/main';
-const FALLBACK_URL = isMobile ? `${FALLBACK_BASE}/3D/space-mobile.glb` : `${FALLBACK_BASE}/3D/space.glb`;
+//
+// Les .glb (~10 et ~6,5 Mo) NE tiennent PAS dans les 10 Mo d'Infomaniak : on
+// les sert depuis GitHub. Primaire = jsDelivr (CDN rapide, cache mondial) ;
+// secours = GitHub raw (propagation immédiate si le CDN n'a pas encore le
+// dernier commit). À chaque nouveau modèle, jsDelivr @main se rafraîchit sous
+// ~12h ; le secours raw, lui, est instantané.
+const GLB_PATH = isMobile ? '3D/space-mobile.glb' : '3D/space.glb';
+const CDN_BASE = 'https://cdn.jsdelivr.net/gh/Leley9/fashion-show-26@main';
+const RAW_BASE = 'https://raw.githubusercontent.com/Leley9/fashion-show-26/main';
+const CDN_URL = `${CDN_BASE}/${GLB_PATH}`;
+const FALLBACK_URL = `${RAW_BASE}/${GLB_PATH}`;
 
 // Progression de la barre, pilotée par les OCTETS RÉELLEMENT REÇUS.
 // Le serveur (dev en "chunked", parfois la prod) omet souvent Content-Length :
@@ -161,7 +165,7 @@ let finished = false;
 
 // Taille exacte des variantes, écrite par le pipeline -> barre précise sans
 // constante codée en dur. Non bloquant : si le fetch échoue, on garde l'estimé.
-fetch('3D/space.manifest.json')
+fetch(`${CDN_BASE}/3D/space.manifest.json`)
   .then((r) => r.json())
   .then((m) => { const b = isMobile ? m.mobile : m.desktop; if (b) estTotal = b; })
   .catch(() => {});
@@ -201,8 +205,8 @@ function finishLoader() {
   })();
 }
 
-// URLs à essayer dans l'ordre
-const MODEL_URLS = [MODEL_PATH, FALLBACK_URL];
+// URLs à essayer dans l'ordre : CDN d'abord, puis secours raw GitHub.
+const MODEL_URLS = [CDN_URL, FALLBACK_URL];
 let currentModelIndex = 0;
 
 function tryLoadModel() {
